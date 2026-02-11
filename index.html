@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Password Generator</title>
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .password-strength-weak {
+            background: linear-gradient(90deg, #ef4444 0%, #f97316 100%);
+        }
+        
+        .password-strength-medium {
+            background: linear-gradient(90deg, #f97316 0%, #eab308 100%);
+        }
+        
+        .password-strength-strong {
+            background: linear-gradient(90deg, #eab308 0%, #22c55e 100%);
+        }
+        
+        .password-strength-very-strong {
+            background: linear-gradient(90deg, #22c55e 0%, #10b981 100%);
+        }
+        
+        .password-strength-bar {
+            transition: all 0.3s ease;
+        }
+        
+        .copy-animation {
+            animation: copyPulse 0.5s ease;
+        }
+        
+        @keyframes copyPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen text-white p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-10 md:mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold mb-3">
+                <i class="fas fa-key mr-3 text-blue-400"></i>Secure Password Generator
+            </h1>
+            <p class="text-gray-300 max-w-2xl mx-auto">
+                Generate strong, secure passwords with customizable options. Use the settings below to create a password that fits your security requirements.
+            </p>
+        </header>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left panel: Password display and options -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Generated Password Display -->
+                <div class="bg-gray-800 rounded-2xl p-6 shadow-xl border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold">Generated Password</h2>
+                        <div class="flex space-x-2">
+                            <button id="refreshBtn" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl transition duration-200">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button id="copyBtn" class="bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl transition duration-200">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="relative">
+                        <div id="passwordDisplay" class="bg-gray-900 text-xl md:text-2xl p-5 rounded-xl border border-gray-700 font-mono break-all min-h-[80px] flex items-center">
+                            Click "Generate Password" to create a password
+                        </div>
+                        <div id="copyNotification" class="absolute top-0 right-0 bg-green-600 text-white px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300">
+                            Copied!
+                        </div>
+                    </div>
+                    
+                    <!-- Password Strength Indicator -->
+                    <div class="mt-6">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-300">Password Strength:</span>
+                            <span id="strengthText" class="font-semibold">-</span>
+                        </div>
+                        <div class="h-3 bg-gray-700 rounded-full overflow-hidden">
+                            <div id="strengthBar" class="h-full password-strength-weak rounded-full w-0"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-400 mt-2">
+                            <span>Weak</span>
+                            <span>Medium</span>
+                            <span>Strong</span>
+                            <span>Very Strong</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Password Options -->
+                <div class="bg-gray-800 rounded-2xl p-6 shadow-xl border border-gray-700">
+                    <h2 class="text-xl font-semibold mb-6">Password Options</h2>
+                    
+                    <!-- Password Length -->
+                    <div class="mb-8">
+                        <div class="flex justify-between items-center mb-3">
+                            <label for="lengthSlider" class="text-gray-300">Length: <span id="lengthValue" class="font-bold text-white">12</span> characters</label>
+                            <span class="text-sm text-gray-400">4-32 characters</span>
+                        </div>
+                        <input type="range" id="lengthSlider" min="4" max="32" value="12" class="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500">
+                    </div>
+                    
+                    <!-- Character Types -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="uppercase" checked class="h-5 w-5 text-blue-500 rounded focus:ring-blue-600 focus:ring-offset-gray-800">
+                                <label for="uppercase" class="ml-3 text-gray-300">Uppercase Letters (A-Z)</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="lowercase" checked class="h-5 w-5 text-blue-500 rounded focus:ring-blue-600 focus:ring-offset-gray-800">
+                                <label for="lowercase" class="ml-3 text-gray-300">Lowercase Letters (a-z)</label>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="numbers" checked class="h-5 w-5 text-blue-500 rounded focus:ring-blue-600 focus:ring-offset-gray-800">
+                                <label for="numbers" class="ml-3 text-gray-300">Numbers (0-9)</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="symbols" class="h-5 w-5 text-blue-500 rounded focus:ring-blue-600 focus:ring-offset-gray-800">
+                                <label for="symbols" class="ml-3 text-gray-300">Symbols (!@#$%^&*)</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Generate Button -->
+                    <button id="generateBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl text-lg transition duration-300 flex items-center justify-center">
+                        <i class="fas fa-bolt mr-3"></i> Generate Password
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Right panel: Password history and tips -->
+            <div class="space-y-8">
+                <!-- Password History -->
+                <div class="bg-gray-800 rounded-2xl p-6 shadow-xl border border-gray-700 h-full">
+                    <h2 class="text-xl font-semibold mb-6 flex items-center">
+                        <i class="fas fa-history mr-3 text-blue-400"></i> Recent Passwords
+                    </h2>
+                    <div id="passwordHistory" class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                        <p class="text-gray-400 text-center py-4">No passwords generated yet</p>
+                    </div>
+                    <div class="mt-6 flex justify-between">
+                        <button id="clearHistoryBtn" class="text-gray-400 hover:text-red-400 transition duration-200">
+                            <i class="fas fa-trash mr-2"></i> Clear History
+                        </button>
+                        <button id="saveHistoryBtn" class="text-gray-400 hover:text-green-400 transition duration-200">
+                            <i class="fas fa-save mr-2"></i> Save All
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Security Tips -->
+                <!--<div class="bg-gray-800 rounded-2xl p-6 shadow-xl border border-gray-700">
+                    <h2 class="text-xl font-semibold mb-6 flex items-center">
+                        <i class="fas fa-shield-alt mr-3 text-green-400"></i> Security Tips
+                    </h2>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <span class="text-gray-300">Use at least 12 characters for stronger passwords</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <span class="text-gray-300">Include a mix of character types (uppercase, lowercase, numbers, symbols)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <span class="text-gray-300">Avoid using personal information or common words</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <span class="text-gray-300">Use a unique password for each account</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mr-3 mt-1"></i>
+                            <span class="text-gray-300">Consider using a password manager to store your passwords securely</span>
+                        </li>
+                    </ul>
+                </div>-->
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-gray-400 text-sm">
+            <p>Generated passwords are created locally in your browser and are not transmitted over the internet.</p>
+            <p class="mt-2">Made with <i class="fas fa-heart text-red-500 mx-1"></i> for secure authentication</p>
+            <p class="mt-2">Design & Developed by <a href="https://mohammadullah.netlify.app/" target="_blank"><b>Mohammadullah Al Hanafi</b></a></p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM elements
+        const passwordDisplay = document.getElementById('passwordDisplay');
+        const lengthSlider = document.getElementById('lengthSlider');
+        const lengthValue = document.getElementById('lengthValue');
+        const uppercaseCheck = document.getElementById('uppercase');
+        const lowercaseCheck = document.getElementById('lowercase');
+        const numbersCheck = document.getElementById('numbers');
+        const symbolsCheck = document.getElementById('symbols');
+        const generateBtn = document.getElementById('generateBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const copyNotification = document.getElementById('copyNotification');
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
+        const passwordHistory = document.getElementById('passwordHistory');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const saveHistoryBtn = document.getElementById('saveHistoryBtn');
+        
+        // Character sets
+        const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
+        const numberChars = '0123456789';
+        const symbolChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        
+        // Password history array
+        let history = JSON.parse(localStorage.getItem('passwordHistory')) || [];
+        
+        // Initialize
+        function init() {
+            updatePasswordHistoryDisplay();
+            
+            // Generate an initial password
+            generatePassword();
+            
+            // Event listeners
+            lengthSlider.addEventListener('input', function() {
+                lengthValue.textContent = this.value;
+                generatePassword();
+            });
+            
+            generateBtn.addEventListener('click', generatePassword);
+            refreshBtn.addEventListener('click', generatePassword);
+            
+            // Copy to clipboard
+            copyBtn.addEventListener('click', copyToClipboard);
+            
+            // Clear history
+            clearHistoryBtn.addEventListener('click', clearHistory);
+            
+            // Save history
+            saveHistoryBtn.addEventListener('click', saveHistory);
+            
+            // Regenerate password when options change
+            [uppercaseCheck, lowercaseCheck, numbersCheck, symbolsCheck].forEach(checkbox => {
+                checkbox.addEventListener('change', generatePassword);
+            });
+        }
+        
+        // Generate password function
+        function generatePassword() {
+            // Get selected options
+            const length = parseInt(lengthSlider.value);
+            const includeUppercase = uppercaseCheck.checked;
+            const includeLowercase = lowercaseCheck.checked;
+            const includeNumbers = numbersCheck.checked;
+            const includeSymbols = symbolsCheck.checked;
+            
+            // Validate at least one character type is selected
+            if (!includeUppercase && !includeLowercase && !includeNumbers && !includeSymbols) {
+                passwordDisplay.textContent = 'Please select at least one character type';
+                updateStrengthIndicator(0);
+                return;
+            }
+            
+            // Build character pool based on selected options
+            let charPool = '';
+            if (includeUppercase) charPool += uppercaseChars;
+            if (includeLowercase) charPool += lowercaseChars;
+            if (includeNumbers) charPool += numberChars;
+            if (includeSymbols) charPool += symbolChars;
+            
+            // Generate password
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * charPool.length);
+                password += charPool[randomIndex];
+            }
+            
+            // Ensure at least one character from each selected type is included
+            password = enforceCharacterTypes(password, includeUppercase, includeLowercase, includeNumbers, includeSymbols);
+            
+            // Display password
+            passwordDisplay.textContent = password;
+            
+            // Add to history
+            addToHistory(password);
+            
+            // Update strength indicator
+            updateStrengthIndicator(password);
+            
+            // Animate the refresh button
+            refreshBtn.classList.add('copy-animation');
+            setTimeout(() => refreshBtn.classList.remove('copy-animation'), 500);
+        }
+        
+        // Ensure at least one character from each selected type is included
+        function enforceCharacterTypes(password, includeUppercase, includeLowercase, includeNumbers, includeSymbols) {
+            const chars = password.split('');
+            let hasUppercase = !includeUppercase;
+            let hasLowercase = !includeLowercase;
+            let hasNumber = !includeNumbers;
+            let hasSymbol = !includeSymbols;
+            
+            // Check what we already have
+            for (let char of chars) {
+                if (uppercaseChars.includes(char)) hasUppercase = true;
+                if (lowercaseChars.includes(char)) hasLowercase = true;
+                if (numberChars.includes(char)) hasNumber = true;
+                if (symbolChars.includes(char)) hasSymbol = true;
+            }
+            
+            // Replace characters if needed
+            if (!hasUppercase && includeUppercase) {
+                const randomIndex = Math.floor(Math.random() * chars.length);
+                const randomUpperIndex = Math.floor(Math.random() * uppercaseChars.length);
+                chars[randomIndex] = uppercaseChars[randomUpperIndex];
+                hasUppercase = true;
+            }
+            
+            if (!hasLowercase && includeLowercase) {
+                const randomIndex = Math.floor(Math.random() * chars.length);
+                const randomLowerIndex = Math.floor(Math.random() * lowercaseChars.length);
+                chars[randomIndex] = lowercaseChars[randomLowerIndex];
+                hasLowercase = true;
+            }
+            
+            if (!hasNumber && includeNumbers) {
+                const randomIndex = Math.floor(Math.random() * chars.length);
+                const randomNumberIndex = Math.floor(Math.random() * numberChars.length);
+                chars[randomIndex] = numberChars[randomNumberIndex];
+                hasNumber = true;
+            }
+            
+            if (!hasSymbol && includeSymbols) {
+                const randomIndex = Math.floor(Math.random() * chars.length);
+                const randomSymbolIndex = Math.floor(Math.random() * symbolChars.length);
+                chars[randomIndex] = symbolChars[randomSymbolIndex];
+                hasSymbol = true;
+            }
+            
+            return chars.join('');
+        }
+        
+        // Update password strength indicator
+        function updateStrengthIndicator(password) {
+            let score = 0;
+            
+            // Length score
+            if (password.length >= 8) score += 1;
+            if (password.length >= 12) score += 1;
+            if (password.length >= 16) score += 1;
+            if (password.length >= 20) score += 1;
+            
+            // Character variety score
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSymbol = /[^A-Za-z0-9]/.test(password);
+            
+            if (hasUppercase) score += 1;
+            if (hasLowercase) score += 1;
+            if (hasNumber) score += 1;
+            if (hasSymbol) score += 2;
+            
+            // Determine strength level
+            let strength, width, colorClass, text;
+            
+            if (score <= 3) {
+                strength = 'weak';
+                width = '25%';
+                colorClass = 'password-strength-weak';
+                text = 'Weak';
+            } else if (score <= 5) {
+                strength = 'medium';
+                width = '50%';
+                colorClass = 'password-strength-medium';
+                text = 'Medium';
+            } else if (score <= 7) {
+                strength = 'strong';
+                width = '75%';
+                colorClass = 'password-strength-strong';
+                text = 'Strong';
+            } else {
+                strength = 'very-strong';
+                width = '100%';
+                colorClass = 'password-strength-very-strong';
+                text = 'Very Strong';
+            }
+            
+            // Update display
+            strengthBar.className = `h-full password-strength-bar rounded-full ${colorClass}`;
+            strengthBar.style.width = width;
+            strengthText.textContent = text;
+        }
+        
+        // Copy password to clipboard
+        function copyToClipboard() {
+            const password = passwordDisplay.textContent;
+            
+            // Check if there's a valid password to copy
+            if (!password || password.includes('Click') || password.includes('Please')) {
+                copyNotification.textContent = 'No password to copy';
+                copyNotification.style.backgroundColor = '#ef4444';
+            } else {
+                navigator.clipboard.writeText(password).then(() => {
+                    copyNotification.textContent = 'Copied!';
+                    copyNotification.style.backgroundColor = '#10b981';
+                });
+            }
+            
+            // Show notification
+            copyNotification.style.opacity = '1';
+            
+            // Animate the copy button
+            copyBtn.classList.add('copy-animation');
+            setTimeout(() => copyBtn.classList.remove('copy-animation'), 500);
+            
+            // Hide notification after 2 seconds
+            setTimeout(() => {
+                copyNotification.style.opacity = '0';
+            }, 2000);
+        }
+        
+        // Add password to history
+        function addToHistory(password) {
+            // Avoid duplicates in a row
+            if (history.length > 0 && history[0].password === password) {
+                return;
+            }
+            
+            // Add to beginning of history
+            history.unshift({
+                password: password,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                date: new Date().toLocaleDateString()
+            });
+            
+            // Keep only last 10 passwords
+            if (history.length > 10) {
+                history.pop();
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('passwordHistory', JSON.stringify(history));
+            
+            // Update display
+            updatePasswordHistoryDisplay();
+        }
+        
+        // Update password history display
+        function updatePasswordHistoryDisplay() {
+            if (history.length === 0) {
+                passwordHistory.innerHTML = '<p class="text-gray-400 text-center py-4">No passwords generated yet</p>';
+                return;
+            }
+            
+            let historyHTML = '';
+            history.forEach((item, index) => {
+                const passwordPreview = item.password.substring(0, 15) + (item.password.length > 15 ? '...' : '');
+                historyHTML += `
+                    <div class="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                        <div class="flex justify-between items-start">
+                            <div class="font-mono text-sm truncate mr-2" title="${item.password}">${passwordPreview}</div>
+                            <button class="copy-history-btn text-blue-400 hover:text-blue-300" data-password="${item.password}">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2">${item.date} at ${item.timestamp}</div>
+                    </div>
+                `;
+            });
+            
+            passwordHistory.innerHTML = historyHTML;
+            
+            // Add event listeners to history copy buttons
+            document.querySelectorAll('.copy-history-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const password = this.getAttribute('data-password');
+                    navigator.clipboard.writeText(password).then(() => {
+                        // Change icon temporarily
+                        const icon = this.querySelector('i');
+                        icon.className = 'fas fa-check';
+                        
+                        setTimeout(() => {
+                            icon.className = 'fas fa-copy';
+                        }, 1500);
+                    });
+                });
+            });
+        }
+        
+        // Clear password history
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear password history?')) {
+                history = [];
+                localStorage.removeItem('passwordHistory');
+                updatePasswordHistoryDisplay();
+            }
+        }
+        
+        // Save password history
+        function saveHistory() {
+            if (history.length === 0) {
+                alert('No passwords to save');
+                return;
+            }
+            
+            let historyText = "Password History:\n\n";
+            history.forEach(item => {
+                historyText += `${item.password} (Generated on ${item.date} at ${item.timestamp})\n`;
+            });
+            
+            // Create a blob and download link
+            const blob = new Blob([historyText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'password-history.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // Show temporary confirmation
+            const originalText = saveHistoryBtn.innerHTML;
+            saveHistoryBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Saved!';
+            saveHistoryBtn.classList.add('text-green-400');
+            
+            setTimeout(() => {
+                saveHistoryBtn.innerHTML = originalText;
+                saveHistoryBtn.classList.remove('text-green-400');
+            }, 2000);
+        }
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
